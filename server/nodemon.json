@@ -1,0 +1,6 @@
+{
+  "watch": ["controllers", "models", "routes", "utils", "config", "index.js", ".env"],
+  "ext": "js,json",
+  "delay": 1500
+}
+

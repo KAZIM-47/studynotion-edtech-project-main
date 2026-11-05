@@ -220,8 +220,11 @@ exports.sendotp = async (req, res) => {
       otp,
     })
   } catch (error) {
-    console.log(error.message)
-    return res.status(500).json({ success: false, error: error.message })
+    console.error("Error occurred while sending OTP:", error.message)
+    return res.status(500).json({
+      success: false,
+      message: "Could not send OTP. Please try again later.",
+    })
   }
 }
 
