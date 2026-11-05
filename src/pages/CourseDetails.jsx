@@ -14,6 +14,8 @@ import { formatDate } from "../services/formatDate"
 import { fetchCourseDetails } from "../services/operations/courseDetailsAPI"
 import { BuyCourse } from "../services/operations/studentFeaturesAPI"
 import GetAvgRating from "../utils/avgRating"
+import { ACCOUNT_TYPE } from "../utils/constants"
+import { toast } from "react-hot-toast"
 import Error from "./Error"
 
 function CourseDetails() {
@@ -49,8 +51,8 @@ function CourseDetails() {
   // Calculating Avg Review count
   const [avgReviewCount, setAvgReviewCount] = useState(0)
   useEffect(() => {
-    const count = GetAvgRating(response?.data?.courseDetails.ratingAndReviews)
-    setAvgReviewCount(count)
+    const count = GetAvgRating(response?.data?.courseDetails?.ratingAndReviews)
+    setAvgReviewCount(count || 0)
   }, [response])
   // console.log("avgReviewCount: ", avgReviewCount)
 
@@ -71,7 +73,7 @@ function CourseDetails() {
   useEffect(() => {
     let lectures = 0
     response?.data?.courseDetails?.courseContent?.forEach((sec) => {
-      lectures += sec.subSection.length || 0
+      lectures += sec.subSection?.length || 0
     })
     setTotalNoOfLectures(lectures)
   }, [response])
@@ -102,6 +104,10 @@ function CourseDetails() {
   } = response.data?.courseDetails
 
   const handleBuyCourse = () => {
+    if (user && user?.accountType === ACCOUNT_TYPE.INSTRUCTOR) {
+      toast.error("You are an Instructor. You cannot purchase a course.")
+      return
+    }
     if (token) {
       BuyCourse(token, [courseId], user, navigate, dispatch)
       return
@@ -149,10 +155,10 @@ function CourseDetails() {
               </div>
               <p className={`text-richblack-200`}>{courseDescription}</p>
               <div className="text-md flex flex-wrap items-center gap-2">
-                <span className="text-yellow-25">{avgReviewCount}</span>
-                <RatingStars Review_Count={avgReviewCount} Star_Size={24} />
-                <span>{`(${ratingAndReviews.length} reviews)`}</span>
-                <span>{`${studentsEnroled.length} students enrolled`}</span>
+                <span className="text-yellow-25">{avgReviewCount || 0}</span>
+                <RatingStars Review_Count={avgReviewCount || 0} Star_Size={24} />
+                <span>{`(${ratingAndReviews?.length || 0} reviews)`}</span>
+                <span>{`${studentsEnroled?.length || 0} students enrolled`}</span>
               </div>
               <div>
                 <p className="">

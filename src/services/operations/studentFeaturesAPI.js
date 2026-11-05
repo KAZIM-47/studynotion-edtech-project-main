@@ -64,9 +64,21 @@ export async function BuyCourse(
     }
     console.log("PAYMENT RESPONSE FROM BACKEND............", orderResponse.data)
 
+    const rzpKey =
+      process.env.REACT_APP_RAZORPAY_KEY ||
+      orderResponse?.data?.keyId ||
+      orderResponse?.data?.data?.key_id
+
+    if (!rzpKey) {
+      toast.error(
+        "Razorpay Key ID is not configured. Please set REACT_APP_RAZORPAY_KEY in .env"
+      )
+      return
+    }
+
     // Opening the Razorpay SDK
     const options = {
-      key: process.env.RAZORPAY_KEY,
+      key: rzpKey,
       currency: orderResponse.data.data.currency,
       amount: `${orderResponse.data.data.amount}`,
       order_id: orderResponse.data.data.id,
@@ -91,7 +103,7 @@ export async function BuyCourse(
     })
   } catch (error) {
     console.log("PAYMENT API ERROR............", error)
-    toast.error("Could Not make Payment.")
+    toast.error(error?.response?.data?.message || error.message || "Could Not make Payment.")
   }
   toast.dismiss(toastId)
 }
