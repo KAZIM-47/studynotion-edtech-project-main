@@ -31,16 +31,26 @@ export default function CourseInformationForm() {
   const { course, editCourse } = useSelector((state) => state.course)
   const [loading, setLoading] = useState(false)
   const [courseCategories, setCourseCategories] = useState([])
+  const [categoriesLoading, setCategoriesLoading] = useState(false)
+  const [categoriesError, setCategoriesError] = useState(false)
 
   useEffect(() => {
     const getCategories = async () => {
-      setLoading(true)
-      const categories = await fetchCourseCategories()
-      if (categories.length > 0) {
-        // console.log("categories", categories)
-        setCourseCategories(categories)
+      setCategoriesLoading(true)
+      setCategoriesError(false)
+      try {
+        const categories = await fetchCourseCategories()
+        if (categories && categories.length > 0) {
+          // console.log("categories", categories)
+          setCourseCategories(categories)
+        } else {
+          setCourseCategories([])
+        }
+      } catch (error) {
+        console.error("Failed to fetch course categories:", error)
+        setCategoriesError(true)
       }
-      setLoading(false)
+      setCategoriesLoading(false)
     }
     // if form is in edit mode
     if (editCourse) {
@@ -50,7 +60,7 @@ export default function CourseInformationForm() {
       setValue("coursePrice", course.price)
       setValue("courseTags", course.tag)
       setValue("courseBenefits", course.whatYouWillLearn)
-      setValue("courseCategory", course.category)
+      setValue("courseCategory", course.category?._id || course.category)
       setValue("courseRequirements", course.instructions)
       setValue("courseImage", course.thumbnail)
     }
@@ -230,11 +240,18 @@ export default function CourseInformationForm() {
           defaultValue=""
           id="courseCategory"
           className="form-style w-full"
+          disabled={categoriesLoading}
         >
           <option value="" disabled>
-            Choose a Category
+            {categoriesLoading
+              ? "Loading categories..."
+              : categoriesError
+              ? "Error loading categories"
+              : courseCategories.length === 0
+              ? "No categories available"
+              : "Choose a Category"}
           </option>
-          {!loading &&
+          {!categoriesLoading &&
             courseCategories?.map((category, indx) => (
               <option key={indx} value={category?._id}>
                 {category?.name}
@@ -244,6 +261,11 @@ export default function CourseInformationForm() {
         {errors.courseCategory && (
           <span className="ml-2 text-xs tracking-wide text-pink-200">
             Course Category is required
+          </span>
+        )}
+        {categoriesError && (
+          <span className="ml-2 text-xs tracking-wide text-pink-200">
+            Failed to fetch categories from server. Please refresh the page.
           </span>
         )}
       </div>

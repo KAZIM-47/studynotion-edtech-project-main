@@ -17,20 +17,24 @@ export default function ChipInput({
 }) {
   const { editCourse, course } = useSelector((state) => state.course)
 
-  // Setting up state for managing chips array
+  // Setting up state for managing chips array and text input
   const [chips, setChips] = useState([])
+  const [tagInput, setTagInput] = useState("")
 
   useEffect(() => {
     if (editCourse) {
-      // console.log(course)
-      setChips(course?.tag)
+      setChips(course?.tag || [])
     }
-    register(name, { required: true, validate: (value) => value.length > 0 })
+    register(name, {
+      required: true,
+      validate: (value) =>
+        (Array.isArray(value) && value.length > 0) || `${label} is required`,
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
-    setValue(name, chips)
+    setValue(name, chips, { shouldValidate: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chips])
 
@@ -38,17 +42,28 @@ export default function ChipInput({
   const handleKeyDown = (event) => {
     // Check if user presses "Enter" or ","
     if (event.key === "Enter" || event.key === ",") {
-      // Prevent the default behavior of the event
+      // Prevent the default behavior of the event (do not submit the form)
       event.preventDefault()
-      // Get the input value and remove any leading/trailing spaces
-      const chipValue = event.target.value.trim()
-      // Check if the input value exists and is not already in the chips array
-      if (chipValue && !chips.includes(chipValue)) {
-        // Add the chip to the array and clear the input
-        const newChips = [...chips, chipValue]
-        setChips(newChips)
-        event.target.value = ""
+      // Get the input value and trim any leading/trailing whitespace
+      const chipValue = tagInput.trim()
+
+      // Prevent empty tag
+      if (!chipValue) {
+        return
       }
+
+      // Check if tag already exists (case-insensitive duplicate check)
+      const isDuplicate = chips.some(
+        (chip) => chip.toLowerCase() === chipValue.toLowerCase()
+      )
+      if (isDuplicate) {
+        return
+      }
+
+      // Add the chip to the array and clear the input
+      const newChips = [...chips, chipValue]
+      setChips(newChips)
+      setTagInput("")
     }
   }
 
@@ -72,15 +87,16 @@ export default function ChipInput({
         {chips.map((chip, index) => (
           <div
             key={index}
-            className="m-1 flex items-center rounded-full bg-yellow-400 px-2 py-1 text-sm text-richblack-5"
+            className="m-1 flex items-center rounded-full bg-yellow-50 px-3 py-1 text-sm font-medium text-richblack-900"
           >
             {/* Render the chip value */}
-            {chip}
+            <span>{chip}</span>
             {/* Render the button to delete the chip */}
             <button
               type="button"
-              className="ml-2 focus:outline-none"
+              className="ml-2 focus:outline-none hover:text-pink-200"
               onClick={() => handleDeleteChip(index)}
+              aria-label={`Remove ${chip}`}
             >
               <MdClose className="text-sm" />
             </button>
@@ -89,9 +105,10 @@ export default function ChipInput({
         {/* Render the input for adding new chips */}
         <input
           id={name}
-          name={name}
           type="text"
           placeholder={placeholder}
+          value={tagInput}
+          onChange={(e) => setTagInput(e.target.value)}
           onKeyDown={handleKeyDown}
           className="form-style w-full"
         />
