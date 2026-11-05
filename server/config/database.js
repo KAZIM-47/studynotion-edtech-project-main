@@ -7,7 +7,11 @@ exports.connect = () => {
 		.connect(mongoUrl)
 		.then(() => console.log("DB Connection Success"))
 		.catch((err) => {
-			console.log("DB Connection Failed");
-			console.error(err.message);
+			console.error("DB Connection Failed:", err.message);
+			if (err.name === "MongooseServerSelectionError") {
+				console.error("\n[MongoDB Atlas IP Whitelist Notice]");
+				console.error("MongoDB Atlas rejected the connection. Your public IP address is not whitelisted in MongoDB Atlas Network Access.");
+				console.error("Please add 0.0.0.0/0 (or your current IP) in MongoDB Atlas -> Security -> Network Access.\n");
+			}
 		});
 };

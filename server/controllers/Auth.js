@@ -142,7 +142,12 @@ exports.login = async (req, res) => {
     // Generate JWT token and Compare Password
     if (await bcrypt.compare(password, user.password)) {
       const token = jwt.sign(
-        { email: user.email, id: user._id, role: user.role },
+        {
+          email: user.email,
+          id: user._id,
+          role: user.accountType,
+          accountType: user.accountType,
+        },
         process.env.JWT_SECRET,
         {
           expiresIn: "24h",
@@ -170,11 +175,12 @@ exports.login = async (req, res) => {
       })
     }
   } catch (error) {
-    console.error(error)
+    console.error("Login Error:", error.message || error)
     // Return 500 Internal Server Error status code with error message
     return res.status(500).json({
       success: false,
       message: `Login Failure Please Try Again`,
+      error: error.message,
     })
   }
 }
